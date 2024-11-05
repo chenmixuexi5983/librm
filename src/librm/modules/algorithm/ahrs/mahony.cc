@@ -30,10 +30,19 @@
 #include "librm/modules/algorithm/utils.hpp"
 
 #if defined(LIBRM_PLATFORM_STM32)
-//---------------------------------------------------------------------------------------------------
-// Fast inverse square-root
-// See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
-static f32 InvSqrt(f32 x) {
+#include "librm/hal/stm32/hal.h"
+
+#if !defined(__FPU_PRESENT)
+#define __FPU_PRESENT 1  // fallback to use sqrtf if we can't determine if FPU is present
+#endif
+
+#endif
+
+inline f32 InvSqrt(f32 x) {
+#if defined(LIBRM_PLATFORM_STM32) && __FPU_PRESENT == 0
+  // Fast inverse square-root
+  // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
+  // for stm32 models that do not have a fpu, we use this algorithm
   f32 halfx = 0.5f * x;
   f32 y = x;
   long i = *reinterpret_cast<long *>(&y);
@@ -41,11 +50,10 @@ static f32 InvSqrt(f32 x) {
   y = *reinterpret_cast<f32 *>(&i);
   y = y * (1.5f - (halfx * y * y));
   return y;
-}
-#elif defined(LIBRM_PLATFORM_LINUX)
-static f32 InvSqrt(f32 x) { return 1.0f / sqrtf(x); }
+#else
+  return 1.f / sqrtf(x);
 #endif
-
+}
 namespace rm::modules::algorithm {
 
 /**

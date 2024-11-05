@@ -113,8 +113,8 @@ class DjiMotor final : public CanDevice {
   [[nodiscard]] i16 current() const { return this->current_; }
   [[nodiscard]] u8 temperature() const { return this->temperature_; }
 
-  [[nodiscard]] f32 pos_degree() const { return this->encoder() / kDjiMotorMaxEncoder * 360.f; }
-  [[nodiscard]] f32 pos_rad() const { return this->encoder() / kDjiMotorMaxEncoder * M_PI * 2; }
+  [[nodiscard]] f32 pos_degree() const { return (f32)this->encoder() / kDjiMotorMaxEncoder * 360.f; }
+  [[nodiscard]] f32 pos_rad() const { return (f32)this->encoder() / kDjiMotorMaxEncoder * M_PI * 2; }
   /*************/
 
  private:
@@ -179,14 +179,14 @@ void DjiMotor<motor_type>::SetCurrent(i16 current) {
  */
 template <DjiMotorType motor_type>
 void DjiMotor<motor_type>::SendCommand() {
-  for (auto &buf : DjiMotorProperties<motor_type>::tx_buf_) {
-    if (buf.second.at(16) == 1) {
-      buf.first->Write(DjiMotorProperties<motor_type>::kControlId[0], buf.second.data(), 8);
-      buf.second.at(16) = 0;
+  for (auto &[canbus, buffer] : DjiMotorProperties<motor_type>::tx_buf_) {
+    if (buffer.at(16) == 1) {
+      canbus->Write(DjiMotorProperties<motor_type>::kControlId[0], buffer.data(), 8);
+      buffer.at(16) = 0;
     }
-    if (buf.second.at(17) == 1) {
-      buf.first->Write(DjiMotorProperties<motor_type>::kControlId[1], buf.second.data() + 8, 8);
-      buf.second.at(17) = 0;
+    if (buffer.at(17) == 1) {
+      canbus->Write(DjiMotorProperties<motor_type>::kControlId[1], buffer.data() + 8, 8);
+      buffer.at(17) = 0;
     }
   }
 }
@@ -195,7 +195,7 @@ void DjiMotor<motor_type>::SendCommand() {
  * @brief  向所有大疆电机发出控制消息
  */
 template <>
-inline void DjiMotor<DjiMotorType::Default>::SendCommand() {
+inline void DjiMotor<>::SendCommand() {
   GM6020::SendCommand();
   M3508::SendCommand();
   M2006::SendCommand();
