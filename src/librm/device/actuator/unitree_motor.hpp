@@ -28,7 +28,6 @@
 #ifndef LIBRM_DEVICE_ACTUATOR_UNITREE_MOTOR_HPP
 #define LIBRM_DEVICE_ACTUATOR_UNITREE_MOTOR_HPP
 
-#include "librm/hal/linux/serial.h"
 #include "librm/hal/serial.h"
 #include "librm/core/typedefs.h"
 #include "librm/modules/algorithm/crc32.h"
@@ -87,22 +86,24 @@ struct send_data {
 namespace rm::device {
 class UnitreeMotor {
  public:
-  UnitreeMotor(u8 motor_id = 0x0);
+  UnitreeMotor(hal::SerialInterface &serial, u8 motor_id = 0x0);
   ~UnitreeMotor() = default;
 
   void SetTau(f32 tau);
 
- public:
-  u8 tx_buffer_[34]{0};
+  void SendCommend();
+
+  void RxCallback(const std::vector<u8> &data, u16 rx_len);
 
  private:
-  void SetParam(ControlParam ctrl_param);
+  void SetParam(const ControlParam& ctrl_param);
 
  private:
-  std::string dev_{};
+  hal::SerialInterface *serial_;
 
   send_data send_data_;
   ControlParam ctrl_param_;
+  u8 tx_buffer_[34]{0};
 };
 
 }  // namespace rm::device
