@@ -28,6 +28,8 @@
 #ifndef LIBRM_HAL_SPI_H
 #define LIBRM_HAL_SPI_H
 
+#include "librm/hal/spi_interface.h"
+
 #if defined(LIBRM_PLATFORM_STM32)
 #include "librm/hal/stm32/spi.h"
 #elif defined(LIBRM_PLATFORM_LINUX)

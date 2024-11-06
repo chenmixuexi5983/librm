@@ -28,6 +28,8 @@
 #ifndef LIBRM_HAL_GPIO_H
 #define LIBRM_HAL_GPIO_H
 
+#include "librm/hal/gpio_interface.h"
+
 #if defined(LIBRM_PLATFORM_STM32)
 #include "librm/hal/stm32/gpio.h"
 #elif defined(LIBRM_PLATFORM_LINUX)

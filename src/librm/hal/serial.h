@@ -28,6 +28,8 @@
 #ifndef LIBRM_HAL_UART_H
 #define LIBRM_HAL_UART_H
 
+#include "librm/hal/serial_interface.h"
+
 #if defined(LIBRM_PLATFORM_STM32)
 #include "librm/hal/stm32/uart.h"
 #elif defined(LIBRM_PLATFORM_LINUX)
