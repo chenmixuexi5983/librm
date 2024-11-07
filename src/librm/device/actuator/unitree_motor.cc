@@ -26,9 +26,34 @@ void UnitreeMotor::SetTau(f32 tau) {
 
 void UnitreeMotor::SendCommend() { this->serial_->Write(tx_buffer_, sizeof(tx_buffer_)); }
 
-void UnitreeMotor::RxCallback(const std::vector<u8> &data, u16 rx_len) {}
+void UnitreeMotor::RxCallback(const std::vector<u8> &data, u16 rx_len) {
+  // if (rx_len != 78) { return; }
 
-void UnitreeMotor::SetParam(const ControlParam &ctrl_param) {
+  std::copy(data.begin(), data.end(), reinterpret_cast<u8 *>(&recv_data_));
+
+  this->fb_param_.mode = recv_data_.data.mode;
+  this->fb_param_.temp = recv_data_.data.temp;
+  this->fb_param_.m_error = recv_data_.data.m_error;
+
+  this->fb_param_.tau = (f32)((f32)recv_data_.data.tau / 256.0f);
+  this->fb_param_.vel = (f32)((f32)recv_data_.data.vel / 128.0f);
+
+  this->fb_param_.acc = (i16)recv_data_.data.acc;
+  this->fb_param_.pos = (f32)((f32)recv_data_.data.pos * 6.2832f / 16384.0f);
+
+  this->fb_param_.gyro[0] = (f32)(((f32)recv_data_.data.gyro[0]) * 0.00107993176f);
+  this->fb_param_.gyro[1] = (f32)(((f32)recv_data_.data.gyro[1]) * 0.00107993176f);
+  this->fb_param_.gyro[2] = (f32)(((f32)recv_data_.data.gyro[2]) * 0.00107993176f);
+
+  this->fb_param_.accel[0] = (f32)(((f32)recv_data_.data.accel[0]) * 0.0023911132f);
+  this->fb_param_.accel[1] = (f32)(((f32)recv_data_.data.accel[1]) * 0.0023911132f);
+  this->fb_param_.accel[2] = (f32)(((f32)recv_data_.data.accel[2]) * 0.0023911132f);
+
+  //test
+  this->test_len = rx_len;
+}
+
+void UnitreeMotor::SetParam(const control_param &ctrl_param) {
   send_data_.data.mode = 10;
   send_data_.data.modify_bit = 0xFF;
   send_data_.data.read_bit = 0x0;

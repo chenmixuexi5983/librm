@@ -35,7 +35,7 @@
 
 #include <string>
 
-union ComData32 {
+union com_data32 {
   i32 L;
   u8 ku8[4];
   u16 ku16[2];
@@ -43,7 +43,7 @@ union ComData32 {
   f32 F;
 };
 
-struct ControlParam {
+struct control_param {
   f32 tau;
   f32 vel;
   f32 pos;
@@ -51,19 +51,34 @@ struct ControlParam {
   f32 kd;
 };
 
-struct ComHead {
+struct feedback_param {
+  u8 mode;
+  i8 temp;
+  u8 m_error;
+
+  f32 tau;
+  f32 vel;
+
+  i16 acc;
+  f32 pos;
+
+  f32 gyro[3];
+  f32 accel[3];
+};
+
+struct com_head {
   u8 head[2]{0xFE, 0xEE};
   u8 motor_id;
   u8 reserved;
 };
 
-struct ComData {
+struct com_data_send {
   u8 mode;
   u8 modify_bit;
   u8 read_bit;
   u8 reserved;
 
-  ComData32 Modify;
+  com_data32 Modify;
 
   i16 tau;
   i16 vel;
@@ -74,13 +89,56 @@ struct ComData {
   u8 LowHzMotorCmdIndex;
   u8 LowHzMotorCmdByte;
 
-  ComData32 Res[1];
+  com_data32 Res[1];
+} __attribute__((packed));
+
+struct com_data_recv {
+  u8 mode;
+  u8 read_bit;
+  i8 temp;
+  u8 m_error;
+
+  com_data32 read;
+  i16 tau;
+
+  i16 vel;
+  f32 low_vel;
+
+  i16 vel_ref;
+  f32 low_vel_ref;
+
+  i16 acc;
+  i16 out_acc;
+
+  i32 pos;
+  i32 out_pos;
+
+  i16 gyro[3];
+  i16 accel[3];
+
+  i16 f_gyro[3];
+  i16 f_acc[3];
+  i16 f_mag[3];
+  u8 f_temp;
+
+  i16 force16;
+  i8 force8;
+
+  u8 f_error;
+
+  i8 res[1];
 } __attribute__((packed));
 
 struct send_data {
-  ComHead head;
-  ComData data;
-  ComData32 crc;
+  com_head head;
+  com_data_send data;
+  com_data32 crc;
+} __attribute__((packed));
+
+struct recv_data {
+  com_head head;
+  com_data_recv data;
+  com_data32 crc;
 } __attribute__((packed));
 
 namespace rm::device {
@@ -95,15 +153,25 @@ class UnitreeMotor {
 
   void RxCallback(const std::vector<u8> &data, u16 rx_len);
 
+  [[nodiscard]] f32 GetTau() { return this->fb_param_.tau; }
+  [[nodiscard]] f32 GetVel() { return this->fb_param_.vel; }
+  [[nodiscard]] i16 GetAcc() { return this->fb_param_.acc; }
+  [[nodiscard]] f32 GetPos() { return this->fb_param_.pos; }
+
  private:
-  void SetParam(const ControlParam& ctrl_param);
+  void SetParam(const control_param& ctrl_param);
 
  private:
   hal::SerialInterface *serial_;
 
   send_data send_data_;
-  ControlParam ctrl_param_;
+  recv_data recv_data_;
+  control_param ctrl_param_;
+  feedback_param fb_param_;
   u8 tx_buffer_[34]{0};
+
+ public:
+  u8 test_len;
 };
 
 }  // namespace rm::device
