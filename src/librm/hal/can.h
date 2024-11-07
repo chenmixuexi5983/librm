@@ -28,6 +28,8 @@
 #ifndef LIBRM_HAL_CAN_H
 #define LIBRM_HAL_CAN_H
 
+#include "librm/hal/can_interface.h"
+
 #if defined(LIBRM_PLATFORM_STM32)
 #include "librm/hal/stm32/bxcan.h"
 #include "librm/hal/stm32/fdcan.h"
