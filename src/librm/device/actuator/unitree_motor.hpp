@@ -169,9 +169,6 @@ class UnitreeMotor {
   control_param ctrl_param_;
   feedback_param fb_param_;
   u8 tx_buffer_[34]{0};
-
- public:
-  u8 test_len;
 };
 
 }  // namespace rm::device
