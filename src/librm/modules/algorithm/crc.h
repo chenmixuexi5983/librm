@@ -36,22 +36,23 @@ namespace rm::modules::algorithm {
 
 constexpr u8 CRC8_INIT = 0xff;
 constexpr u16 CRC16_INIT = 0xffff;
+constexpr u32 CRC32_INIT = 0xffffffff;
 
-u8 Crc8(const u8 *input, unsigned int len, u8 uc_crc8);
+u8 Crc8(const u8 *input, usize len, u8 init);
+u8 Crc8(std::string_view input, u8 init);
+u8 Crc8(const std::string &input, u8 init);
 
-u8 Crc8(std::string_view input, u8 uc_crc8);
+u16 Crc16(const u16 *input, usize len, u16 init);
+u16 Crc16(std::string_view input, u16 init);
+u16 Crc16(const std::string &input, u16 init);
 
-u8 Crc8(const std::string &input, u8 uc_crc8);
+u32 Crc32(const u32 *input, usize len, u32 init);
+u32 Crc32(std::string_view input, u32 init);
+u32 Crc32(const std::string &input, u32 init);
 
-void AppendCrc8(u8 *input, unsigned int len);
-
-u16 Crc16(const u8 *input, uint32_t len, u16 w_crc);
-
-u16 Crc16(std::string_view input, u16 w_crc);
-
-u16 Crc16(const std::string &input, u16 w_crc);
-
-void AppendCrc16(u8 *input, uint32_t len);
+u16 CrcCcitt(const u8 *input, usize len, u16 init);
+u16 CrcCcitt(std::string_view input, u16 init);
+u16 CrcCcitt(const std::string &input, u16 init);
 
 }  // namespace rm::modules::algorithm
 

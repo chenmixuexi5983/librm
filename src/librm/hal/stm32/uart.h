@@ -59,6 +59,7 @@ class Uart : public SerialInterface {
 
  private:
   void HalRxCpltCallback(u16 rx_len);
+  void HalErrorCallback(UART_HandleTypeDef *huart);
 
   SerialRxCallbackFunction *rx_callback_{nullptr};
   UART_HandleTypeDef *huart_;
