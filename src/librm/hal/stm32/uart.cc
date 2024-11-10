@@ -47,7 +47,8 @@ static auto StdFunctionToCallbackFunctionPtr(std::function<void(u16)> fn) -> pUA
   return [](UART_HandleTypeDef *handle, u16 rx_len) { fn_v(rx_len); };
 }
 
-static auto StdFunctionToErrorCallbackFunctionPtr(std::function<void(UART_HandleTypeDef *)> fn) -> pUART_CallbackTypeDef {
+static auto StdFunctionToErrorCallbackFunctionPtr(std::function<void(UART_HandleTypeDef *)> fn)
+    -> pUART_CallbackTypeDef {
   static auto fn_v = std::move(fn);
   return [](UART_HandleTypeDef *handle) { fn_v(handle); };
 }
@@ -86,7 +87,8 @@ void Uart::Begin() {
 
   // 注册错误回调函数
   HAL_UART_RegisterCallback(
-      this->huart_, HAL_UART_ERROR_CB_ID, StdFunctionToErrorCallbackFunctionPtr(std::bind(&Uart::HalErrorCallback, this, std::placeholders::_1)));
+      this->huart_, HAL_UART_ERROR_CB_ID,
+      StdFunctionToErrorCallbackFunctionPtr(std::bind(&Uart::HalErrorCallback, this, std::placeholders::_1)));
 
   // 启动接收
   switch (this->rx_mode_) {
