@@ -33,16 +33,29 @@
 using namespace rm::device;
 
 /**
+ * @brief 串口接收回调函数键值对
+ * @note  用于存储串口接收回调函数
+ * @note  key: 串口对象指针
+ * @note  value: 电机ID和回调函数的键值对
+ * @note  key: 电机ID
+ * @note  value: 回调函数
+ * 解释：相当于两个键对应一个值，第一个键是串口对象指针，第二个键是电机ID，值是回调函数，用于实现多个电机的回调函数
+ */
+std::unordered_map<rm::hal::SerialInterface *, std::unordered_map<u8, std::function<void(const std::vector<u8>&, u16)>>> rx_callback_map;
+
+/**
  * @param[in]      serial     串口对象
  * @param[in]      motor_id   电机ID
  * @returns        None
  */
+
 UnitreeMotor::UnitreeMotor(hal::SerialInterface &serial, u8 motor_id) : serial_(&serial) {
-  static hal::SerialRxCallbackFunction rx_callback =
+  rx_callback_map[&serial][motor_id] =
       std::bind(&UnitreeMotor::RxCallback, this, std::placeholders::_1, std::placeholders::_2);
-  serial_->AttachRxCallback(rx_callback);
+  serial_->AttachRxCallback(rx_callback_map[&serial][motor_id]);
 
   send_data_.head.motor_id = motor_id;
+  send_data_.head.reserved = 0x0;
 }
 
 /**
@@ -77,26 +90,31 @@ void UnitreeMotor::RxCallback(const std::vector<u8> &data, u16 rx_len) {
   if (rx_len != 78) {
     return;
   }
-
   std::copy(data.begin(), data.end(), reinterpret_cast<u8 *>(&recv_data_));
 
-  fb_param_.mode = recv_data_.data.mode;
-  fb_param_.temp = recv_data_.data.temp;
-  fb_param_.m_error = recv_data_.data.m_error;
+  if (recv_data_.head.head[0] != 0xFE || recv_data_.head.head[1] != 0xEE) {
+    return;
+  }
 
-  fb_param_.tau = (f32)((f32)recv_data_.data.tau / 256.0f);
-  fb_param_.vel = (f32)((f32)recv_data_.data.vel / 128.0f);
+  if (recv_data_.head.motor_id == send_data_.head.motor_id) {
+    fb_param_.mode = recv_data_.data.mode;
+    fb_param_.temp = recv_data_.data.temp;
+    fb_param_.m_error = recv_data_.data.m_error;
 
-  fb_param_.acc = (i16)recv_data_.data.acc;
-  fb_param_.pos = (f32)((f32)recv_data_.data.pos * 6.2832f / 16384.0f);
+    fb_param_.tau = (f32)((f32)recv_data_.data.tau / 256.0f);
+    fb_param_.vel = (f32)((f32)recv_data_.data.vel / 128.0f);
 
-  fb_param_.gyro[0] = (f32)(((f32)recv_data_.data.gyro[0]) * 0.00107993176f);
-  fb_param_.gyro[1] = (f32)(((f32)recv_data_.data.gyro[1]) * 0.00107993176f);
-  fb_param_.gyro[2] = (f32)(((f32)recv_data_.data.gyro[2]) * 0.00107993176f);
+    fb_param_.acc = (i16)recv_data_.data.acc;
+    fb_param_.pos = (f32)((f32)recv_data_.data.pos * 6.2832f / 16384.0f);
 
-  fb_param_.accel[0] = (f32)(((f32)recv_data_.data.accel[0]) * 0.0023911132f);
-  fb_param_.accel[1] = (f32)(((f32)recv_data_.data.accel[1]) * 0.0023911132f);
-  fb_param_.accel[2] = (f32)(((f32)recv_data_.data.accel[2]) * 0.0023911132f);
+    fb_param_.gyro[0] = (f32)(((f32)recv_data_.data.gyro[0]) * 0.00107993176f);
+    fb_param_.gyro[1] = (f32)(((f32)recv_data_.data.gyro[1]) * 0.00107993176f);
+    fb_param_.gyro[2] = (f32)(((f32)recv_data_.data.gyro[2]) * 0.00107993176f);
+
+    fb_param_.accel[0] = (f32)(((f32)recv_data_.data.accel[0]) * 0.0023911132f);
+    fb_param_.accel[1] = (f32)(((f32)recv_data_.data.accel[1]) * 0.0023911132f);
+    fb_param_.accel[2] = (f32)(((f32)recv_data_.data.accel[2]) * 0.0023911132f);
+  }
 }
 
 /**

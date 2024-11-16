@@ -34,6 +34,8 @@
 #include "librm/hal/serial_interface.h"
 #include "librm/core/typedefs.h"
 
+#include <unordered_map>
+
 namespace rm::hal::stm32 {
 
 enum class UartMode {
@@ -59,7 +61,7 @@ class Uart : public SerialInterface {
 
  private:
   void HalRxCpltCallback(u16 rx_len);
-  void HalErrorCallback(UART_HandleTypeDef *huart);
+  void HalErrorCallback();
 
   SerialRxCallbackFunction *rx_callback_{nullptr};
   UART_HandleTypeDef *huart_;
