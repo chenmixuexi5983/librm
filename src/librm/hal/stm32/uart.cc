@@ -161,7 +161,7 @@ void Uart::Write(const u8 *data, usize size) {
  * @brief 注册用户定义的接收完成回调函数
  * @param callback 回调函数
  */
-void Uart::AttachRxCallback(SerialRxCallbackFunction &callback) { this->rx_callback_ = &callback; }
+void Uart::AttachRxCallback(SerialRxCallbackFunction &callback) { this->rx_callbacks_.push_back(&callback); }
 
 /**
  * @return 接收缓冲区
@@ -192,9 +192,11 @@ void Uart::HalRxCpltCallback(u16 rx_len) {
       break;
 #endif
   }
-  // 调用子类重写的回调函数
-  if (this->rx_callback_ != nullptr) {
-    (*this->rx_callback_)(this->rx_buf_[this->buffer_selector_], rx_len);
+  // 调用外部重写的回调函数
+  for (auto callback : this->rx_callbacks_) {
+    if (callback != nullptr) {
+      (*callback)(this->rx_buf_[this->buffer_selector_], rx_len);
+    }
   }
   // 切换缓冲区
   this->buffer_selector_ = !this->buffer_selector_;
