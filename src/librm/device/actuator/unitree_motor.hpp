@@ -154,10 +154,10 @@ class UnitreeMotor {
 
   void RxCallback(const std::vector<u8> &data, u16 rx_len);
 
-  [[nodiscard]] f32 GetTau() { return this->fb_param_.tau; }
-  [[nodiscard]] f32 GetVel() { return this->fb_param_.vel; }
-  [[nodiscard]] i16 GetAcc() { return this->fb_param_.acc; }
-  [[nodiscard]] f32 GetPos() { return this->fb_param_.pos; }
+  [[nodiscard]] f32 tau() { return this->fb_param_.tau / 9.1f; }
+  [[nodiscard]] f32 vel() { return this->fb_param_.vel / 9.1f; }
+  [[nodiscard]] i16 acc() { return this->fb_param_.acc; }
+  [[nodiscard]] f32 pos() { return this->fb_param_.pos / 9.1f; }
 
  private:
   void SetParam(const ControlParam &ctrl_param);
