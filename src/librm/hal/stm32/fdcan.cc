@@ -38,17 +38,29 @@
 #include "librm/core/exception.h"
 
 /**
+* 用于存储回调函数的map
+* key: HAL库的CAN_HandleTypeDef
+* value: 回调函数
+*/
+static std::unordered_map<FDCAN_HandleTypeDef *, std::function<void()>> fn_cb_map;
+
+/**
  * @brief  把std::function转换为函数指针
  * @param  fn   要转换的函数
+ * @param  hfdcan  HAL库的FDCAN_HandleTypeDef
  * @return      转换后的函数指针
  * @note
  * 背景：因为要用面向对象的方式对外设进行封装，所以回调函数必须存在于类内。但是存在于类内就意味着这个回调函数多了一个this参数，
  * 而HAL库要求的回调函数并没有这个this参数。通过std::bind，可以生成一个参数列表里没有this指针的std::function对象，而std::function
  * 并不能直接强转成函数指针。借助这个函数，可以把std::function对象转换成函数指针。然后就可以把这个类内的回调函数传给HAL库了。
  */
-static pFDCAN_RxFifo0CallbackTypeDef StdFunctionToCallbackFunctionPtr(std::function<void()> fn) {
-  static auto fn_v = std::move(fn);
-  return [](FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs) { fn_v(); };
+static pFDCAN_RxFifo0CallbackTypeDef StdFunctionToCallbackFunctionPtr(std::function<void()> fn, FDCAN_HandleTypeDef *hfdcan) {
+  fn_cb_map[hfdcan] = std::move(fn);
+  return [](FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs) { 
+    if (fn_cb_map.find(hfdcan) != fn_cb_map.end()) {
+      fn_cb_map[hfdcan]();
+    }
+  };
 }
 
 namespace rm::hal::stm32 {
@@ -166,7 +178,7 @@ void FdCan::Begin() {
     ThrowException(Exception::kHALError);  // HAL_CAN_ActivateNotification error
   }
   HAL_FDCAN_RegisterRxFifo0Callback(this->hfdcan_,
-                                    StdFunctionToCallbackFunctionPtr([this] { Fifo0MsgPendingCallback(); }));
+                                    StdFunctionToCallbackFunctionPtr([this] { Fifo0MsgPendingCallback(); }, this->hfdcan_));
   if (HAL_FDCAN_Start(this->hfdcan_) != HAL_OK) {
     ThrowException(Exception::kHALError);  // HAL_CAN_Start error
   }
