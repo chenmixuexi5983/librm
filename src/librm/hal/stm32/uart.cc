@@ -61,8 +61,8 @@ static std::unordered_map<UART_HandleTypeDef *, std::function<void(void)>> fn_er
  * 并不能直接强转成函数指针。借助这个函数，可以把std::function对象转换成函数指针。然后就可以把这个类内的回调函数传给HAL库了。
  */
 
-static auto StdFunctionToCallbackFunctionPtr(std::function<void(u16)> fn,
-                                             UART_HandleTypeDef *huart) -> pUART_RxEventCallbackTypeDef {
+static auto StdFunctionToCallbackFunctionPtr(std::function<void(u16)> fn, UART_HandleTypeDef *huart)
+    -> pUART_RxEventCallbackTypeDef {
   fn_cb_map[huart] = std::move(fn);
   return [](UART_HandleTypeDef *handle, u16 rx_len) {
     if (fn_cb_map.find(handle) != fn_cb_map.end()) {
@@ -71,8 +71,8 @@ static auto StdFunctionToCallbackFunctionPtr(std::function<void(u16)> fn,
   };
 }
 
-static auto StdFunctionToErrorCallbackFunctionPtr(std::function<void(void)> fn,
-                                                  UART_HandleTypeDef *huart) -> pUART_CallbackTypeDef {
+static auto StdFunctionToErrorCallbackFunctionPtr(std::function<void(void)> fn, UART_HandleTypeDef *huart)
+    -> pUART_CallbackTypeDef {
   fn_error_map[huart] = std::move(fn);
   return [](UART_HandleTypeDef *handle) {
     if (fn_error_map.find(handle) != fn_error_map.end()) {
@@ -82,9 +82,6 @@ static auto StdFunctionToErrorCallbackFunctionPtr(std::function<void(void)> fn,
 }
 
 namespace rm::hal::stm32 {
-
-using core::exception::Exception;
-using core::exception::ThrowException;
 
 /**
  * @param huart            HAL库的UART句柄
@@ -104,10 +101,10 @@ Uart::Uart(UART_HandleTypeDef &huart, usize rx_buffer_size, UartMode tx_mode, Ua
 void Uart::Begin() {
   // 检查dma模式下是否已经配置好DMA
   if (this->tx_mode_ == UartMode::kDma && this->huart_->hdmatx == nullptr) {
-    ThrowException(Exception::kHALError);
+    Throw(std::runtime_error("DMA mode is selected but DMA is not configured"));
   }
   if (this->rx_mode_ == UartMode::kDma && this->huart_->hdmarx == nullptr) {
-    ThrowException(Exception::kHALError);
+    Throw(std::runtime_error("DMA mode is selected but DMA is not configured"));
   }
   // 注册接收完成回调函数
   HAL_UART_RegisterRxEventCallback(

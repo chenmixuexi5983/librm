@@ -26,12 +26,14 @@
  */
 
 #include "librm/hal/stm32/hal.h"
+
 #if defined(HAL_CAN_MODULE_ENABLED)
 #include "librm/hal/stm32/check_register_callbacks.h"
 
 #include "bxcan.h"
 
 #include <functional>
+#include <stdexcept>
 
 #include "librm/device/can_device.hpp"
 #include "librm/core/exception.h"
@@ -51,9 +53,6 @@ static pCAN_CallbackTypeDef StdFunctionToCallbackFunctionPtr(std::function<void(
 }
 
 namespace rm::hal::stm32 {
-
-using core::exception::Exception;
-using core::exception::ThrowException;
 
 /**
  * @param hcan HAL库的CAN_HandleTypeDef
@@ -83,8 +82,10 @@ void BxCan::SetFilter(u16 id, u16 mask) {
     can_filter_st.SlaveStartFilterBank = 14;
     can_filter_st.FilterBank = 14;
   }
-  if (HAL_CAN_ConfigFilter(this->hcan_, &can_filter_st) != HAL_OK) {
-    ThrowException(Exception::kHALError);  // HAL_CAN_ConfigFilter error
+
+  HAL_StatusTypeDef hal_status = HAL_CAN_ConfigFilter(this->hcan_, &can_filter_st);
+  if (hal_status != HAL_OK) {
+    Throw(hal_error(hal_status));
   }
 }
 
@@ -96,12 +97,14 @@ void BxCan::SetFilter(u16 id, u16 mask) {
  */
 void BxCan::Write(u16 id, const u8 *data, usize size) {
   if (size > 8) {
-    ThrowException(Exception::kValueError);  // 数据长度超过8
+    Throw(std::runtime_error("Data is too long for a std CAN frame!"));
   }
   this->hal_tx_header_.StdId = id;
   this->hal_tx_header_.DLC = size;
-  if (HAL_CAN_AddTxMessage(this->hcan_, &this->hal_tx_header_, const_cast<u8 *>(data), &this->tx_mailbox_) != HAL_OK) {
-    ThrowException(Exception::kHALError);  // HAL_CAN_AddTxMessage error
+
+  HAL_StatusTypeDef hal_status = HAL_CAN_AddTxMessage(this->hcan_, &this->hal_tx_header_, data, &this->tx_mailbox_);
+  if (hal_status != HAL_OK) {
+    Throw(hal_error(hal_status));
   }
 }
 
@@ -134,7 +137,7 @@ void BxCan::Write() {
  */
 void BxCan::Enqueue(u16 id, const u8 *data, usize size, CanTxPriority priority) {
   if (size > 8) {
-    ThrowException(Exception::kValueError);  // 数据长度超过8
+    Throw(std::runtime_error("Data is too long for a CAN frame!"));
   }
   // 检查消息队列长度是否超过了设定的最大长度，如果超过了就清空
   if (this->tx_queue_[priority].size() > kQueueMaxSize) {
@@ -153,11 +156,14 @@ void BxCan::Enqueue(u16 id, const u8 *data, usize size, CanTxPriority priority) 
  * @brief 启动CAN外设
  */
 void BxCan::Begin() {
-  if (HAL_CAN_Start(this->hcan_) != HAL_OK) {
-    ThrowException(Exception::kHALError);  // HAL_CAN_Start error
+  HAL_StatusTypeDef hal_status;
+  hal_status = HAL_CAN_Start(this->hcan_);
+  if (hal_status != HAL_OK) {
+    Throw(hal_error(hal_status));
   }
-  if (HAL_CAN_ActivateNotification(this->hcan_, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK) {
-    ThrowException(Exception::kHALError);  // HAL_CAN_ActivateNotification error
+  hal_status = HAL_CAN_ActivateNotification(this->hcan_, CAN_IT_RX_FIFO0_MSG_PENDING);
+  if (hal_status != HAL_OK) {
+    Throw(hal_error(hal_status));
   }
   HAL_CAN_RegisterCallback(this->hcan_, HAL_CAN_RX_FIFO0_MSG_PENDING_CB_ID,
                            StdFunctionToCallbackFunctionPtr(std::bind(&BxCan::Fifo0MsgPendingCallback, this)));
@@ -167,9 +173,10 @@ void BxCan::Begin() {
  * @brief 停止CAN外设
  */
 void BxCan::Stop() {
-  if (HAL_CAN_Stop(this->hcan_) != HAL_OK) {
-    ThrowException(Exception::kHALError);  // HAL_CAN_Stop error
-  };
+  HAL_StatusTypeDef hal_status = HAL_CAN_Stop(this->hcan_);
+  if (hal_status != HAL_OK) {
+    Throw(hal_error(hal_status));
+  }
 }
 
 /**
@@ -194,7 +201,7 @@ void BxCan::Fifo0MsgPendingCallback() {
  */
 void BxCan::RegisterDevice(device::CanDevice &device, u32 rx_stdid) {
   if (this->device_list_.find(rx_stdid) != this->device_list_.end()) {
-    ThrowException(Exception::kValueError);
+    Throw(std::runtime_error("Device already registered"));
   }
   this->device_list_[rx_stdid] = &device;
 }

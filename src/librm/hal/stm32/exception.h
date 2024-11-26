@@ -21,35 +21,46 @@
 */
 
 /**
- * @file  librm/core/exception.h
- * @brief 异常处理
+ * @file  librm/hal/stm32/exception.h
+ * @brief 对STM32 HAL库里异常枚举的封装
  */
 
-#ifndef LIBRM_CORE_EXCEPTIONS_H
-#define LIBRM_CORE_EXCEPTIONS_H
+#ifndef LIBRM_HAL_STM32_EXCEPTION_H
+#define LIBRM_HAL_STM32_EXCEPTION_H
 
 #include <stdexcept>
 
-#if defined(LIBRM_PLATFORM_STM32)
-#include "librm/hal/stm32/exception.h"
-#endif
+#include "librm/hal/stm32/hal.h"
 
 namespace rm {
 
-/**
- * @brief 抛出异常
- * @param e 异常类型
- */
-inline void Throw(const std::exception& e) {
-#if defined(LIBRM_PLATFORM_LINUX)
-  throw e;
-#elif defined(LIBRM_PLATFORM_STM32)
-  // TODO 裸机不能直接抛异常，但为了防止进一步出错，先把程序停在这里
-  while (true) {
+class hal_error : public std::exception {
+ public:
+  hal_error(HAL_StatusTypeDef status) {
+    switch (status) {
+      case HAL_OK:
+        msg_ = "HAL_OK";
+        break;
+      case HAL_ERROR:
+        msg_ = "HAL_ERROR";
+        break;
+      case HAL_BUSY:
+        msg_ = "HAL_BUSY";
+        break;
+      case HAL_TIMEOUT:
+        msg_ = "HAL_TIMEOUT";
+        break;
+      default:
+        msg_ = "Unknown HAL error";
+        break;
+    }
   }
-#endif
-}
+  const char* what() const noexcept override { return msg_; }
+
+ private:
+  const char* msg_;
+};
 
 }  // namespace rm
 
-#endif
+#endif  // LIBRM_HAL_STM32_EXCEPTION_H

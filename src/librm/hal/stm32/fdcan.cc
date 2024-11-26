@@ -66,9 +66,6 @@ static pFDCAN_RxFifo0CallbackTypeDef StdFunctionToCallbackFunctionPtr(std::funct
 
 namespace rm::hal::stm32 {
 
-using core::exception::Exception;
-using core::exception::ThrowException;
-
 /**
  * @param hcan HAL库的CAN_HandleTypeDef
  */
@@ -97,11 +94,15 @@ void FdCan::SetFilter(u16 id, u16 mask) {
   if (reinterpret_cast<u32>(this->hfdcan_->Instance) == FDCAN3_BASE) {
     can_filter_st.FilterIndex = 2;
   }
-  if (HAL_FDCAN_ConfigGlobalFilter(this->hfdcan_, FDCAN_ACCEPT_IN_RX_FIFO0, FDCAN_REJECT, DISABLE, DISABLE) == HAL_OK) {
-    ThrowException(Exception::kHALError);  // HAL_CAN_ConfigFilter error
+
+  HAL_StatusTypeDef hal_status;
+  hal_status = HAL_FDCAN_ConfigGlobalFilter(this->hfdcan_, FDCAN_ACCEPT_IN_RX_FIFO0, FDCAN_REJECT, DISABLE, DISABLE);
+  if (hal_status == HAL_OK) {
+    Throw(hal_error(hal_status));
   }
-  if (HAL_FDCAN_ConfigFilter(this->hfdcan_, &can_filter_st) == HAL_OK) {
-    ThrowException(Exception::kHALError);  // HAL_CAN_ConfigFilter error
+  hal_status = HAL_FDCAN_ConfigFilter(this->hfdcan_, &can_filter_st);
+  if (hal_status == HAL_OK) {
+    Throw(hal_error(hal_status));
   }
 }
 
@@ -114,12 +115,15 @@ void FdCan::SetFilter(u16 id, u16 mask) {
 void FdCan::Write(u16 id, const u8 *data, usize size) {
   if (size > 8) {
     // todo:发送长度大于8的消息
-    ThrowException(Exception::kValueError);  // 数据长度超过8
+    Throw(std::runtime_error("Frame too long, extended frame is not supported yet"));
   }
   this->hal_tx_header_.Identifier = id;
   this->hal_tx_header_.DataLength = size;
-  if (HAL_FDCAN_AddMessageToTxFifoQ(this->hfdcan_, &this->hal_tx_header_, const_cast<u8 *>(data)) != HAL_OK) {
-    ThrowException(Exception::kHALError);  // HAL_CAN_AddTxMessage error
+
+  HAL_StatusTypeDef hal_status =
+      HAL_FDCAN_AddMessageToTxFifoQ(this->hfdcan_, &this->hal_tx_header_, const_cast<u8 *>(data));
+  if (hal_status == HAL_OK) {
+    Throw(hal_error(hal_status));
   }
 }
 
@@ -153,7 +157,7 @@ void FdCan::Write() {
 void FdCan::Enqueue(u16 id, const u8 *data, usize size, CanTxPriority priority) {
   if (size > 8) {
     // todo:发送长度大于8的消息
-    ThrowException(Exception::kValueError);  // 数据长度超过8
+    Throw(std::runtime_error("Frame too long, extended frame is not supported yet"));
   }
   // 检查消息队列长度是否超过了设定的最大长度，如果超过了就清空
   if (this->tx_queue_[priority].size() > kQueueMaxSize) {
@@ -172,16 +176,20 @@ void FdCan::Enqueue(u16 id, const u8 *data, usize size, CanTxPriority priority) 
  * @brief 启动CAN外设
  */
 void FdCan::Begin() {
-  if (HAL_FDCAN_ActivateNotification(this->hfdcan_, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK) {
-    ThrowException(Exception::kHALError);  // HAL_CAN_ActivateNotification error
+  HAL_StatusTypeDef hal_status;
+  hal_status = HAL_FDCAN_ActivateNotification(this->hfdcan_, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
+  if (hal_status == HAL_OK) {
+    Throw(hal_error(hal_status));
   }
-  if (HAL_FDCAN_ActivateNotification(this->hfdcan_, FDCAN_IT_BUS_OFF, 0) != HAL_OK) {
-    ThrowException(Exception::kHALError);  // HAL_CAN_ActivateNotification error
+  hal_status = HAL_FDCAN_ActivateNotification(this->hfdcan_, FDCAN_IT_BUS_OFF, 0);
+  if (hal_status == HAL_OK) {
+    Throw(hal_error(hal_status));
   }
   HAL_FDCAN_RegisterRxFifo0Callback(
       this->hfdcan_, StdFunctionToCallbackFunctionPtr([this] { Fifo0MsgPendingCallback(); }, this->hfdcan_));
-  if (HAL_FDCAN_Start(this->hfdcan_) != HAL_OK) {
-    ThrowException(Exception::kHALError);  // HAL_CAN_Start error
+  hal_status = HAL_FDCAN_Start(this->hfdcan_);
+  if (hal_status == HAL_OK) {
+    Throw(hal_error(hal_status));
   }
 }
 
@@ -189,9 +197,10 @@ void FdCan::Begin() {
  * @brief 停止CAN外设
  */
 void FdCan::Stop() {
-  if (HAL_FDCAN_Stop(this->hfdcan_) != HAL_OK) {
-    ThrowException(Exception::kHALError);  // HAL_CAN_Stop error
-  };
+  HAL_StatusTypeDef hal_status = HAL_FDCAN_Stop(this->hfdcan_);
+  if (hal_status == HAL_OK) {
+    Throw(hal_error(hal_status));
+  }
 }
 
 /**
@@ -216,7 +225,7 @@ void FdCan::Fifo0MsgPendingCallback() {
  */
 void FdCan::RegisterDevice(device::CanDevice &device, u32 rx_stdid) {
   if (this->device_list_.find(rx_stdid) != this->device_list_.end()) {
-    ThrowException(Exception::kValueError);
+    Throw(std::runtime_error("Device already registered"));
   }
   this->device_list_[rx_stdid] = &device;
 }
