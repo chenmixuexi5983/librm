@@ -157,6 +157,12 @@ void BxCan::Enqueue(u16 id, const u8 *data, usize size, CanTxPriority priority) 
  */
 void BxCan::Begin() {
   HAL_StatusTypeDef hal_status;
+  hal_status =
+      HAL_CAN_RegisterCallback(this->hcan_, HAL_CAN_RX_FIFO0_MSG_PENDING_CB_ID,
+                               StdFunctionToCallbackFunctionPtr(std::bind(&BxCan::Fifo0MsgPendingCallback, this)));
+  if (hal_status != HAL_OK) {
+    Throw(hal_error(hal_status));
+  }
   hal_status = HAL_CAN_Start(this->hcan_);
   if (hal_status != HAL_OK) {
     Throw(hal_error(hal_status));
@@ -165,8 +171,6 @@ void BxCan::Begin() {
   if (hal_status != HAL_OK) {
     Throw(hal_error(hal_status));
   }
-  HAL_CAN_RegisterCallback(this->hcan_, HAL_CAN_RX_FIFO0_MSG_PENDING_CB_ID,
-                           StdFunctionToCallbackFunctionPtr(std::bind(&BxCan::Fifo0MsgPendingCallback, this)));
 }
 
 /**
