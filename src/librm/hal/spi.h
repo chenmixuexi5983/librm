@@ -37,7 +37,7 @@
 #endif
 
 namespace rm::hal {
-#if defined(LIBRM_PLATFORM_STM32) && defined(HAL_GPIO_MODULE_ENABLED)
+#if defined(LIBRM_PLATFORM_STM32) && defined(HAL_SPI_MODULE_ENABLED)
 using Spi = stm32::Spi;
 #elif defined(LIBRM_PLATFORM_LINUX)
 #if defined(LIBRM_PLATFORM_LINUX_RASPI)
