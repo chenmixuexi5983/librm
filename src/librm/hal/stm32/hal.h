@@ -37,6 +37,9 @@
 #elif defined(STM32L412xx) && __has_include("stm32l412xx.h") && __has_include("stm32l4xx_hal.h")
 #include "stm32l412xx.h"
 #include "stm32l4xx_hal.h"
+#elif defined(STM32F427xx) && __has_include("stm32f427xx.h") && __has_include("stm32f4xx_hal.h")
+#include "stm32f427xx.h"
+#include "stm32f4xx_hal.h"
 #endif
 
 #endif  // LIBRM_HAL_STM32_HAL_H
