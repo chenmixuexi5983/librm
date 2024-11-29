@@ -7,3 +7,5 @@
 [submodule "libs/eternal"]
 	path = libs/eternal
 	url = https://github.com/mapbox/eternal.git
+[submodule "libs/kalman/"]
+	branch = master
