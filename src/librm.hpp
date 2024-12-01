@@ -46,6 +46,7 @@
 /******** DEVICE ********/
 #include "librm/device/device.h"
 #include "librm/device/can_device.hpp"
+#include "librm/device/actuator/directdrive_motor.hpp"
 #include "librm/device/actuator/dji_motor.hpp"
 #include "librm/device/actuator/dm_motor.hpp"
 #include "librm/device/actuator/unitree_motor.hpp"
