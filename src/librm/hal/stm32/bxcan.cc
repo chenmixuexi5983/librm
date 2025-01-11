@@ -34,6 +34,7 @@
 
 #include <functional>
 #include <stdexcept>
+#include <algorithm>
 
 #include "librm/device/can_device.hpp"
 #include "librm/core/exception.h"
