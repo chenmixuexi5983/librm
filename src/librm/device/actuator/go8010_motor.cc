@@ -32,8 +32,6 @@
 #include "librm/hal/serial_interface.h"
 #include "librm/modules/algorithm/crc.h"
 
-namespace rm::device {
-
 /**
  * @brief 串口接收回调函数键值对
  * @note  用于存储串口接收回调函数
@@ -44,8 +42,10 @@ namespace rm::device {
  * 解释：相当于两个键对应一个值，第一个键是串口对象指针，第二个键是电机ID，值是回调函数，用于实现多个电机的回调函数
  */
 std::unordered_map<rm::hal::SerialInterface *,
-                   std::unordered_map<u8, std::function<void(const std::vector<u8> &, u16)>>>
-    rx_callback_map;
+                   std::unordered_map<rm::u8, std::function<void(const std::vector<rm::u8> &, rm::u16)>>>
+    rx_callback_map_go8010;
+
+namespace rm::device {
 
 /**
  * @param[in]      serial     串口对象
@@ -53,9 +53,9 @@ std::unordered_map<rm::hal::SerialInterface *,
  * @returns        None
  */
 Go8010Motor::Go8010Motor(hal::SerialInterface &serial, u8 motor_id) : serial_(&serial) {
-  rx_callback_map[&serial][motor_id] =
+  rx_callback_map_go8010[&serial][motor_id] =
       std::bind(&Go8010Motor::RxCallback, this, std::placeholders::_1, std::placeholders::_2);
-  serial_->AttachRxCallback(rx_callback_map[&serial][motor_id]);
+  serial_->AttachRxCallback(rx_callback_map_go8010[&serial][motor_id]);
 
   send_data_.id = motor_id;
 }

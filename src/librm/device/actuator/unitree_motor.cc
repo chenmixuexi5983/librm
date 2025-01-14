@@ -30,8 +30,6 @@
 #include "librm/hal/serial_interface.h"
 #include "librm/modules/algorithm/crc.h"
 
-namespace rm::device {
-
 /**
  * @brief 串口接收回调函数键值对
  * @note  用于存储串口接收回调函数
@@ -42,8 +40,10 @@ namespace rm::device {
  * 解释：相当于两个键对应一个值，第一个键是串口对象指针，第二个键是电机ID，值是回调函数，用于实现多个电机的回调函数
  */
 std::unordered_map<rm::hal::SerialInterface *,
-                   std::unordered_map<u8, std::function<void(const std::vector<u8> &, u16)>>>
+                   std::unordered_map<rm::u8, std::function<void(const std::vector<rm::u8> &, rm::u16)>>>
     rx_callback_map;
+
+namespace rm::device {
 
 /**
  * @param[in]      serial     串口对象
