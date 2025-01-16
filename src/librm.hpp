@@ -59,7 +59,7 @@
 /******** MISC MODULES ********/
 #include "librm/modules/algorithm/ahrs/mahony.h"
 #include "librm/modules/algorithm/ahrs/ekf.h"
-#include "librm/modules/algorithm/chassis_fkik.h"
+#include "librm/modules/algorithm/chassis_fkik.hpp"
 #include "librm/modules/algorithm/crc.h"
 #include "librm/modules/algorithm/pid.h"
 #include "librm/modules/algorithm/utils.hpp"
