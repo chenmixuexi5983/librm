@@ -153,6 +153,10 @@ class Go8010Motor {
 
   void RxCallback(const std::vector<u8> &data, u16 rx_len);
 
+  [[nodiscard]] f32 tau() { return this->recv_data_.tau / 6.33f; }
+  [[nodiscard]] f32 vel() { return this->recv_data_.vel / 6.33f; }
+  [[nodiscard]] f32 pos() { return this->recv_data_.pos / 6.33f; }
+
  private:
   void SetParam(const SendData &send_data);
   
