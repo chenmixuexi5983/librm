@@ -58,23 +58,21 @@ class MecanumChassis : public ChassisInterface {
 };
 
 /**
- * @brief 舵轮底盘
+ * @brief 四舵轮底盘
  */
 class SteeringChassis : public ChassisInterface {
  public:
-  SteeringChassis() = delete;
-  ~SteeringChassis() override = default;
   explicit SteeringChassis(f32 chassis_radius);
+  void Forward(f32 vx, f32 vy, f32 w);
+  void Forward(f32 vx, f32 vy, f32 w, f32 current_lf_angle, f32 current_rf_angle, f32 current_lr_angle,
+               f32 current_rr_angle);
 
-  void Forward(f32 vx, f32 vy, f32 wz) override;
-  // TODO: ik
-
-  f32 vx_{}, vy_{}, wz_{};
-  f32 front_wheel_speed_{}, back_wheel_speed_{}, left_wheel_speed_{}, right_wheel_speed_{};
-  f32 front_steer_angle_{}, back_steer_angle_{}, left_steer_angle_{}, right_steer_angle_{};
+ public:
+  double lf_steer_position, rf_steer_position, lr_steer_position, rr_steer_position;
+  double lf_wheel_speed, rf_wheel_speed, lr_wheel_speed, rr_wheel_speed;
 
  private:
-  f32 chassis_radius_;
+  double chassis_radius_;
 };
 
 /**
@@ -85,11 +83,11 @@ class QuadOmniChassis : public ChassisInterface {
   QuadOmniChassis() = default;
   ~QuadOmniChassis() override = default;
 
-  void Forward(float vx, float vy, float wz) override;
-  void Inverse(float front_wheel_speed, float back_wheel_speed, float left_wheel_speed, float right_wheel_speed);
+  void Forward(f32 vx, f32 vy, f32 wz) override;
+  void Inverse(f32 front_wheel_speed, f32 back_wheel_speed, f32 left_wheel_speed, f32 right_wheel_speed);
 
-  float vx_{}, vy_{}, wz_{};
-  float front_wheel_speed_{}, back_wheel_speed_{}, left_wheel_speed_{}, right_wheel_speed_{};
+  f32 vx_{}, vy_{}, wz_{};
+  f32 front_wheel_speed_{}, back_wheel_speed_{}, left_wheel_speed_{}, right_wheel_speed_{};
 };
 
 }  // namespace rm::modules::algorithm
