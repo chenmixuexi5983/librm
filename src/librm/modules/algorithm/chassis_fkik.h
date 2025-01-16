@@ -32,62 +32,65 @@
 
 namespace rm::modules::algorithm {
 
-class ChassisInterface {
- public:
-  virtual ~ChassisInterface() = default;
-  virtual void Forward(f32 vx, f32 vy, f32 wz) = 0;
-};
-
 /**
  * @brief 麦轮底盘
  */
-class MecanumChassis : public ChassisInterface {
+class MecanumChassis {
  public:
   MecanumChassis() = delete;
-  ~MecanumChassis() override = default;
+  ~MecanumChassis() = default;
   MecanumChassis(f32 wheel_base, f32 wheel_track);
 
-  void Forward(f32 vx, f32 vy, f32 wz) override;
+  auto Forward(f32 vx, f32 vy, f32 wz);
   // TODO: ik
-
-  f32 speeds_[4]{};
+  inline auto forward_result() const { return forward_result_; }
 
  private:
-  f32 wheel_base_{};   // 轮子间距
-  f32 wheel_track_{};  // 轮子轴距
+  struct {
+    f32 lf_speed, rf_speed, lr_speed, rr_speed;
+  } forward_result_{};
+  f32 wheel_base_;   // 轮子间距
+  f32 wheel_track_;  // 轮子轴距
 };
 
 /**
  * @brief 四舵轮底盘
  */
-class SteeringChassis : public ChassisInterface {
+class SteeringChassis {
  public:
   explicit SteeringChassis(f32 chassis_radius);
-  void Forward(f32 vx, f32 vy, f32 w);
-  void Forward(f32 vx, f32 vy, f32 w, f32 current_lf_angle, f32 current_rf_angle, f32 current_lr_angle,
+  auto Forward(f32 vx, f32 vy, f32 w);
+  auto Forward(f32 vx, f32 vy, f32 w, f32 current_lf_angle, f32 current_rf_angle, f32 current_lr_angle,
                f32 current_rr_angle);
-
- public:
-  double lf_steer_position, rf_steer_position, lr_steer_position, rr_steer_position;
-  double lf_wheel_speed, rf_wheel_speed, lr_wheel_speed, rr_wheel_speed;
+  inline auto forward_result() const { return forward_result_; }
 
  private:
+  struct {
+    double lf_steer_position, rf_steer_position, lr_steer_position, rr_steer_position;
+    double lf_wheel_speed, rf_wheel_speed, lr_wheel_speed, rr_wheel_speed;
+  } forward_result_{};
   double chassis_radius_;
 };
 
 /**
  * @brief 四全向轮底盘
  */
-class QuadOmniChassis : public ChassisInterface {
+class QuadOmniChassis {
  public:
   QuadOmniChassis() = default;
-  ~QuadOmniChassis() override = default;
+  ~QuadOmniChassis() = default;
 
-  void Forward(f32 vx, f32 vy, f32 wz) override;
-  void Inverse(f32 front_wheel_speed, f32 back_wheel_speed, f32 left_wheel_speed, f32 right_wheel_speed);
+  auto Forward(f32 vx, f32 vy, f32 wz);
+  auto Inverse(f32 front_wheel_speed, f32 back_wheel_speed, f32 left_wheel_speed, f32 right_wheel_speed);
+  inline auto forward_result() const { return forward_result_; }
+  inline auto inverse_result() const { return inverse_result_; }
 
-  f32 vx_{}, vy_{}, wz_{};
-  f32 front_wheel_speed_{}, back_wheel_speed_{}, left_wheel_speed_{}, right_wheel_speed_{};
+  struct {
+    f32 vx, vy, wz;
+  } inverse_result_{};
+  struct {
+    f32 front_wheel_speed, back_wheel_speed, left_wheel_speed, right_wheel_speed;
+  } forward_result_{};
 };
 
 }  // namespace rm::modules::algorithm
