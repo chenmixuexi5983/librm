@@ -50,6 +50,7 @@
 #include "librm/device/actuator/dji_motor.hpp"
 #include "librm/device/actuator/dm_motor.hpp"
 #include "librm/device/actuator/unitree_motor.hpp"
+#include "librm/device/referee/referee.hpp"
 #include "librm/device/remote/dr16.h"
 #include "librm/device/sensor/bmi088.h"
 #include "librm/device/sensor/ist8310.h"
