@@ -21,4 +21,9 @@ if (LIBRM_PLATFORM STREQUAL "LINUX")
     target_link_libraries(third_party INTERFACE serial)
 endif ()
 
+if (LIBRM_PLATFORM_LINUX_TYPE STREQUAL "RASPI")
+    find_library(WIRINGPI_LIBRARIES NAMES wiringPi)
+    target_link_libraries(third_party INTERFACE ${WIRINGPI_LIBRARIES})
+endif()
+
 target_link_libraries(third_party INTERFACE Kalman eigen eternal)
