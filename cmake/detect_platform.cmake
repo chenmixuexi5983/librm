@@ -56,7 +56,7 @@ message(STATUS "[librm]: Platform: ${LIBRM_PLATFORM}")
 
 # 如果顺利判断出平台是Linux，就根据找到的package进一步判断是哪一种嵌入式Linux
 if (${LIBRM_PLATFORM} STREQUAL "LINUX")
-    if (NOT ${WIRINGPI_LIBRARIES} STREQUAL "")
+    if (NOT ${WIRINGPI_LIBRARIES} STREQUAL "WIRINGPI_LIBRARIES-NOTFOUND")
         message(STATUS "[librm]: Found WiringPi")
         set(LIBRM_PLATFORM_LINUX_TYPE "RASPI")
     elseif (JetsonGPIO_FOUND)
