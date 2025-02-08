@@ -62,7 +62,7 @@
 #include "librm/modules/algorithm/ahrs/ekf.h"
 #include "librm/modules/algorithm/chassis_fkik.hpp"
 #include "librm/modules/algorithm/crc.h"
-#include "librm/modules/algorithm/pid.h"
+#include "librm/modules/algorithm/pid.hpp"
 #include "librm/modules/algorithm/utils.hpp"
 #include "librm/modules/vofa_plotter.hpp"
 /****************/
