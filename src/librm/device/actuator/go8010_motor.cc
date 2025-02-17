@@ -129,10 +129,10 @@ void Go8010Motor::SetParam(const SendData &send_data) {
   send_data_.motor_send_data.comd.k_pos = send_data.kp * 1280;
   send_data_.motor_send_data.comd.k_spd = send_data.kd * 1280;
 
-  send_data_.motor_send_data.CRC16 = rm::modules::algorithm::CrcCcitt((rm::u8*)&send_data_.motor_send_data, 15, 0x0);
+  send_data_.motor_send_data.CRC16 = rm::modules::algorithm::CrcCcitt((rm::u8 *)&send_data_.motor_send_data, 15, 0x0);
 
-  std::copy(reinterpret_cast<u8 *>(&send_data_.motor_send_data), reinterpret_cast<u8 *>(&send_data_.motor_send_data) + sizeof(send_data_.motor_send_data),
-            tx_buffer_);
+  std::copy(reinterpret_cast<u8 *>(&send_data_.motor_send_data),
+            reinterpret_cast<u8 *>(&send_data_.motor_send_data) + sizeof(send_data_.motor_send_data), tx_buffer_);
 }
 
 }  // namespace rm::device
