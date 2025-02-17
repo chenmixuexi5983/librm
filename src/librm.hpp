@@ -51,6 +51,7 @@
 #include "librm/device/actuator/dm_motor.hpp"
 #include "librm/device/actuator/unitree_motor.hpp"
 #include "librm/device/actuator/go8010_motor.hpp"
+#include "librm/device/referee/referee.hpp"
 #include "librm/device/remote/dr16.h"
 #include "librm/device/sensor/bmi088.h"
 #include "librm/device/sensor/ist8310.h"
@@ -60,9 +61,9 @@
 /******** MISC MODULES ********/
 #include "librm/modules/algorithm/ahrs/mahony.h"
 #include "librm/modules/algorithm/ahrs/ekf.h"
-#include "librm/modules/algorithm/chassis_fkik.h"
+#include "librm/modules/algorithm/chassis_fkik.hpp"
 #include "librm/modules/algorithm/crc.h"
-#include "librm/modules/algorithm/pid.h"
+#include "librm/modules/algorithm/pid.hpp"
 #include "librm/modules/algorithm/utils.hpp"
 #include "librm/modules/vofa_plotter.hpp"
 /****************/

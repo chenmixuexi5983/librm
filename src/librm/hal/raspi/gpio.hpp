@@ -21,34 +21,60 @@
 */
 
 /**
- * @file  librm/hal/can.h
- * @brief 根据平台宏定义决定具体实现，并且在gpio_interface.h里提供一个接口类PinInterface实现多态
+ * @file    librm/hal/raspi/gpio.h
+ * @brief   wiringPi的gpio封装
  */
 
-#ifndef LIBRM_HAL_GPIO_H
-#define LIBRM_HAL_GPIO_H
+#ifndef LIBRM_HAL_RASPI_GPIO_HPP
+#define LIBRM_HAL_RASPI_GPIO_HPP
 
+#if defined(LIBRM_PLATFORM_LINUX_RASPI)
+
+#include <wiringPi.h>
+
+#include "librm/core/typedefs.h"
 #include "librm/hal/gpio_interface.h"
+#include "librm/hal/raspi/wiringpi_init.hpp"
 
-#if defined(LIBRM_PLATFORM_STM32)
-#include "librm/hal/stm32/gpio.h"
-#elif defined(LIBRM_PLATFORM_LINUX)
-#if defined(LIBRM_PLATFORM_LINUX_RASPI)
-#include "librm/hal/raspi/gpio.hpp"
-#endif
-#endif
+namespace rm::hal::raspi {
 
-namespace rm::hal {
-#if defined(LIBRM_PLATFORM_STM32) && defined(HAL_GPIO_MODULE_ENABLED)
-using Pin = stm32::Pin;
-#elif defined(LIBRM_PLATFORM_LINUX)
-#if defined(LIBRM_PLATFORM_LINUX_RASPI)
+/**
+ * @brief   GPIO引脚类
+ * @tparam  mode INPUT/OUTPUT, other modes todo
+ */
 template <int mode>
-using Pin = raspi::Pin<mode>;
-#elif defined(LIBRM_PLATFORM_LINUX_JETSON)
-// TODO: JetsonGPIO GPIO wrapper
-#endif
-#endif
-}  // namespace rm::hal
+class Pin final : public PinInterface {
+ public:
+  Pin(usize pin) : pin_{pin} {
+    static_assert(mode == OUTPUT || mode == INPUT, "unsupported pin mode!");
+    InitWiringPi();
+    pinMode(pin, mode);
+  }
 
-#endif  // LIBRM_HAL_GPIO_H
+  Pin() = delete;
+  ~Pin() override = default;
+
+  void Write(bool state) override {
+    if constexpr (mode == OUTPUT) {
+      digitalWrite(pin_, state);
+      state_ = state;
+    }
+  }
+
+  [[nodiscard]] bool Read() const override {
+    if constexpr (mode == OUTPUT) {
+      return state_;
+    } else if constexpr (mode == INPUT) {
+      return digitalRead(pin_);
+    }
+  }
+
+ protected:
+  usize pin_;
+  bool state_{};
+};
+
+}  // namespace rm::hal::raspi
+#endif
+
+#endif  // LIBRM_HAL_RASPI_GPIO_HPP

@@ -32,7 +32,7 @@
 
 namespace rm::device {
 
-std::unordered_map<hal::CanInterface *, DirectDriveMotor::TxBufferTable> tx_buffer_table_;
+std::unordered_map<hal::CanInterface *, DirectDriveMotor::TxBufferTable> DirectDriveMotor::tx_buffer_table_{};
 
 void DirectDriveMotor::RxCallback(const hal::CanMsg *msg) {
   if (msg->rx_std_id == 0x50 + id_) {

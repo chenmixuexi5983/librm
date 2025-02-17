@@ -21,34 +21,27 @@
 */
 
 /**
- * @file  librm/hal/can.h
- * @brief 根据平台宏定义决定具体实现，并且在gpio_interface.h里提供一个接口类PinInterface实现多态
+ * @file    librm/hal/raspi/gpio.h
+ * @brief   wiringPi的gpio封装
  */
 
-#ifndef LIBRM_HAL_GPIO_H
-#define LIBRM_HAL_GPIO_H
-
-#include "librm/hal/gpio_interface.h"
-
-#if defined(LIBRM_PLATFORM_STM32)
-#include "librm/hal/stm32/gpio.h"
-#elif defined(LIBRM_PLATFORM_LINUX)
 #if defined(LIBRM_PLATFORM_LINUX_RASPI)
-#include "librm/hal/raspi/gpio.hpp"
-#endif
-#endif
 
-namespace rm::hal {
-#if defined(LIBRM_PLATFORM_STM32) && defined(HAL_GPIO_MODULE_ENABLED)
-using Pin = stm32::Pin;
-#elif defined(LIBRM_PLATFORM_LINUX)
-#if defined(LIBRM_PLATFORM_LINUX_RASPI)
-template <int mode>
-using Pin = raspi::Pin<mode>;
-#elif defined(LIBRM_PLATFORM_LINUX_JETSON)
-// TODO: JetsonGPIO GPIO wrapper
-#endif
-#endif
-}  // namespace rm::hal
+#include "wiringpi_init.hpp"
 
-#endif  // LIBRM_HAL_GPIO_H
+#include <wiringPi.h>
+
+namespace rm::hal::raspi {
+
+bool global_wiringpi_initialized{false};
+
+void InitWiringPi() {
+  if (!global_wiringpi_initialized) {
+    wiringPiSetup();
+    global_wiringpi_initialized = true;
+  }
+}
+
+}  // namespace rm::hal::raspi
+
+#endif  // LIBRM_PLATFORM_LINUX_RASPI
