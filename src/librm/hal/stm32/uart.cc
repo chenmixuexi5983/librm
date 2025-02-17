@@ -33,8 +33,6 @@
 
 #include "librm/core/exception.h"
 
-namespace rm::hal::stm32 {
-
 /**
  * @brief 串口接收回调函数键值对
  * @note  用于存储串口接收回调函数
@@ -42,7 +40,7 @@ namespace rm::hal::stm32 {
  * @note  value: 回调函数
  * 解释：键是串口对象指针，值是回调函数，用于实现多个串口的回调函数
  */
-static std::unordered_map<UART_HandleTypeDef *, std::function<void(u16)>> fn_cb_map;
+static std::unordered_map<UART_HandleTypeDef *, std::function<void(rm::u16)>> fn_cb_map;
 
 /**
  * @brief 串口错误回调函数键值对
@@ -58,15 +56,15 @@ static std::unordered_map<UART_HandleTypeDef *, std::function<void(void)>> fn_er
  * @param  fn   要转换的函数
  * @return      转换后的函数指针
  * @note
- * 背景：因为要用面向对象的方式对外设进行封装，所以回调函数必须存在于类内。但是存在于类内就意味着这个回调函数多了一个this参数，
+ * 背景：因为要用面向对象的方式对外 设进行封装，所以回调函数必须存在于类内。但是存在于类内就意味着这个回调函数多了一个this参数，
  * 而HAL库要求的回调函数并没有这个this参数。通过std::bind，可以生成一个参数列表里没有this指针的std::function对象，而std::function
  * 并不能直接强转成函数指针。借助这个函数，可以把std::function对象转换成函数指针。然后就可以把这个类内的回调函数传给HAL库了。
  */
 
-static auto StdFunctionToCallbackFunctionPtr(std::function<void(u16)> fn,
+static auto StdFunctionToCallbackFunctionPtr(std::function<void(rm::u16)> fn,
                                              UART_HandleTypeDef *huart) -> pUART_RxEventCallbackTypeDef {
   fn_cb_map[huart] = std::move(fn);
-  return [](UART_HandleTypeDef *handle, u16 rx_len) {
+  return [](UART_HandleTypeDef *handle, rm::u16 rx_len) {
     if (fn_cb_map.find(handle) != fn_cb_map.end()) {
       fn_cb_map[handle](rx_len);
     }
@@ -82,6 +80,8 @@ static auto StdFunctionToErrorCallbackFunctionPtr(std::function<void(void)> fn,
     }
   };
 }
+
+namespace rm::hal::stm32 {
 
 /**
  * @param huart            HAL库的UART句柄
