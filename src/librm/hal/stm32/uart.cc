@@ -56,7 +56,8 @@ static std::unordered_map<UART_HandleTypeDef *, std::function<void(void)>> fn_er
  * @param  fn   要转换的函数
  * @return      转换后的函数指针
  * @note
- * 背景：因为要用面向对象的方式对外 设进行封装，所以回调函数必须存在于类内。但是存在于类内就意味着这个回调函数多了一个this参数，
+ * 背景：因为要用面向对象的方式对外
+ * 设进行封装，所以回调函数必须存在于类内。但是存在于类内就意味着这个回调函数多了一个this参数，
  * 而HAL库要求的回调函数并没有这个this参数。通过std::bind，可以生成一个参数列表里没有this指针的std::function对象，而std::function
  * 并不能直接强转成函数指针。借助这个函数，可以把std::function对象转换成函数指针。然后就可以把这个类内的回调函数传给HAL库了。
  */
