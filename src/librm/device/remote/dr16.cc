@@ -83,6 +83,11 @@ i16 DR16::right_y() const { return this->axes_[1]; }
 i16 DR16::dial() const { return this->axes_[4]; }
 RcSwitchState DR16::switch_l() const { return this->switches_[1]; }
 RcSwitchState DR16::switch_r() const { return this->switches_[0]; }
+i16 DR16::mouse_x() const { return this->mouse_[0]; }
+i16 DR16::mouse_y() const { return this->mouse_[1]; }
+i16 DR16::mouse_z() const { return this->mouse_[2]; }
+bool DR16::mouse_button_left() const { return this->mouse_button_[0]; }
+bool DR16::mouse_button_right() const { return this->mouse_button_[1]; }
 bool DR16::key(RcKey key) const { return (this->keyboard_key_ & static_cast<u16>(key)); }
 
 }  // namespace rm::device

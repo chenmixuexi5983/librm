@@ -150,7 +150,7 @@ class DmMotor final : public CanDevice {
             typename std::enable_if_t<mode == DmMotorControlMode::kMit, int> = 0>
   void SetPosition(f32 position_rad, f32 max_speed_rad_per_sec, f32 accel_torque_nm, f32 kp, f32 kd) {
     if (this->reversed_) {
-      position_rad = this->settings_.p_max - position_rad;
+      position_rad = 0 - position_rad;
     }
     u16 pos_tmp =
         modules::algorithm::utils::FloatToInt(position_rad, -this->settings_.p_max, this->settings_.p_max, 16);
@@ -184,7 +184,7 @@ class DmMotor final : public CanDevice {
             typename std::enable_if_t<mode == DmMotorControlMode::kSpeedPosition, int> = 0>
   void SetPosition(f32 position_rad, f32 max_speed_rad_per_sec) {
     if (this->reversed_) {
-      position_rad = this->settings_.p_max - position_rad;
+      position_rad = 0 - position_rad;
     }
     memcpy(this->tx_buffer_, &position_rad, 4);
     memcpy(this->tx_buffer_ + 4, &max_speed_rad_per_sec, 4);
@@ -241,7 +241,7 @@ class DmMotor final : public CanDevice {
     this->mos_temperature_ = msg->data[6];
     this->coil_temperature_ = msg->data[7];
     if (this->reversed_) {
-      this->position_ = this->settings_.p_max - this->position_;
+      this->position_ = 0 - this->position_;
       this->speed_ = -this->speed_;
       this->torque_ = -this->torque_;
     }
