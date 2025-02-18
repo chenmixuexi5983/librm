@@ -25,8 +25,8 @@
  * @brief 裁判系统串口协议V1.6.4(2024-7-15)
  */
 
-#ifndef LIBRM_DEVICE_REFEREE_PROTOCOL_V170_HPP
-#define LIBRM_DEVICE_REFEREE_PROTOCOL_V170_HPP
+#ifndef LIBRM_DEVICE_REFEREE_PROTOCOL_V164_HPP
+#define LIBRM_DEVICE_REFEREE_PROTOCOL_V164_HPP
 
 #include "protocol.hpp"
 
@@ -253,4 +253,4 @@ const inline std::unordered_map<u16, usize> referee_protocol_memory_map<RefereeR
 
 }  // namespace rm::device
 
-#endif  // LIBRM_DEVICE_REFEREE_PROTOCOL_V170_HPP
+#endif  // LIBRM_DEVICE_REFEREE_PROTOCOL_V164_HPP
