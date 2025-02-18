@@ -131,13 +131,13 @@ u8 Crc8(const std::string &input, u8 init) {
  * @param[in]      init   init value
  * @returns        crc16
  */
-u16 Crc16(const u16 *input, usize len, u16 init) {
+u16 Crc16(const u8 *input, usize len, u16 init) {
   if (input == nullptr) {
     return 0xffff;
   }
   while (len--) {
-    const u16 ch_data = *input++;
-    init = init >> 8 ^ CRC16_TABLE[(init ^ static_cast<u16>(ch_data)) & 0x00ff];
+    const u8 ch_data = *input++;
+    init = (static_cast<u16>(init) >> 8) ^ CRC16_TABLE[(static_cast<u16>(init) ^ static_cast<u16>(ch_data)) & 0x00ff];
   }
   return init;
 }
@@ -149,7 +149,7 @@ u16 Crc16(const u16 *input, usize len, u16 init) {
  * @returns        crc16
  */
 u16 Crc16(const std::string_view input, u16 init) {
-  return Crc16(reinterpret_cast<const u16 *>(input.data()), input.size(), init);
+  return Crc16((u8 *)input.data(), input.size(), init);
 }
 
 /**
@@ -159,7 +159,7 @@ u16 Crc16(const std::string_view input, u16 init) {
  * @returns        crc16
  */
 u16 Crc16(const std::string &input, u16 init) {
-  return Crc16(reinterpret_cast<const u16 *>(input.data()), input.size(), init);
+  return Crc16((u8 *)input.data(), input.size(), init);
 }
 
 /**
