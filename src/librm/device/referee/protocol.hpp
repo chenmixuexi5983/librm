@@ -45,6 +45,7 @@ constexpr auto kRefProtocolAllMetadataLen = kRefProtocolHeaderLen + kRefProtocol
  * @brief 裁判系统协议版本
  */
 enum class RefereeRevision {
+  kV164,  ///< V1.6.4, 2024-7-15
   kV170,  ///< V1.7.0, 2024-12-25
 };
 
