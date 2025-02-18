@@ -42,7 +42,7 @@ u8 Crc8(const u8 *input, usize len, u8 init);
 u8 Crc8(std::string_view input, u8 init);
 u8 Crc8(const std::string &input, u8 init);
 
-u16 Crc16(const u16 *input, usize len, u16 init);
+u16 Crc16(const u8 *input, usize len, u16 init);
 u16 Crc16(std::string_view input, u16 init);
 u16 Crc16(const std::string &input, u16 init);
 

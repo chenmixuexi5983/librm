@@ -28,6 +28,7 @@
 #ifndef LIBRM_DEVICE_REFEREE_REFEREE_HPP
 #define LIBRM_DEVICE_REFEREE_REFEREE_HPP
 
+#include "protocol_v164.hpp"
 #include "protocol_v170.hpp"
 // implement and add more revisions here
 
@@ -118,8 +119,7 @@ class Referee {
           crc16_this_time_ = (valid_data_so_far_[kRefProtocolAllMetadataLen + data_len_this_time_ - 1] << 8) |
                              valid_data_so_far_[kRefProtocolAllMetadataLen + data_len_this_time_ - 2];
 
-          if (modules::algorithm::Crc16((u16*)valid_data_so_far_.data(),
-                                        kRefProtocolAllMetadataLen + data_len_this_time_ - 2,
+          if (modules::algorithm::Crc16(valid_data_so_far_.data(), kRefProtocolAllMetadataLen + data_len_this_time_ - 2,
                                         modules::algorithm::CRC16_INIT) == crc16_this_time_) {
             cmdid_this_time_ = (valid_data_so_far_[6] << 8) | valid_data_so_far_[5];
 
