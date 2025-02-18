@@ -67,8 +67,8 @@ class PID {
     p_out_ = 0;
     i_out_ = 0;
     d_out_ = 0;
-    std::memset(d_buf_, 0, 3);
-    std::memset(error_, 0, 3);
+    std::memset(d_buf_, 0, sizeof(d_buf_));
+    std::memset(error_, 0, sizeof(error_));
   }
   [[nodiscard]] f32 value() const { return utils::absConstrain(p_out_ + i_out_ + d_out_, max_out_); }
   [[nodiscard]] f32 p_out() const { return p_out_; }
