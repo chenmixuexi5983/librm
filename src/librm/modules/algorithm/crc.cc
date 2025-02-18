@@ -148,9 +148,7 @@ u16 Crc16(const u8 *input, usize len, u16 init) {
  * @param[in]      init   init value
  * @returns        crc16
  */
-u16 Crc16(const std::string_view input, u16 init) {
-  return Crc16((u8 *)input.data(), input.size(), init);
-}
+u16 Crc16(const std::string_view input, u16 init) { return Crc16((u8 *)input.data(), input.size(), init); }
 
 /**
  * @brief          calculate crc16
@@ -158,9 +156,7 @@ u16 Crc16(const std::string_view input, u16 init) {
  * @param[in]      init   init value
  * @returns        crc16
  */
-u16 Crc16(const std::string &input, u16 init) {
-  return Crc16((u8 *)input.data(), input.size(), init);
-}
+u16 Crc16(const std::string &input, u16 init) { return Crc16((u8 *)input.data(), input.size(), init); }
 
 /**
  * @brief          calculate crc32
