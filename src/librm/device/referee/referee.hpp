@@ -28,6 +28,7 @@
 #ifndef LIBRM_DEVICE_REFEREE_REFEREE_HPP
 #define LIBRM_DEVICE_REFEREE_REFEREE_HPP
 
+#include "protocol_v164.hpp"
 #include "protocol_v170.hpp"
 // implement and add more revisions here
 
