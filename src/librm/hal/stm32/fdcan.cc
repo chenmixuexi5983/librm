@@ -98,11 +98,11 @@ void FdCan::SetFilter(u16 id, u16 mask) {
 
   HAL_StatusTypeDef hal_status;
   hal_status = HAL_FDCAN_ConfigGlobalFilter(this->hfdcan_, FDCAN_ACCEPT_IN_RX_FIFO0, FDCAN_REJECT, DISABLE, DISABLE);
-  if (hal_status == HAL_OK) {
+  if (hal_status != HAL_OK) {
     Throw(hal_error(hal_status));
   }
   hal_status = HAL_FDCAN_ConfigFilter(this->hfdcan_, &can_filter_st);
-  if (hal_status == HAL_OK) {
+  if (hal_status != HAL_OK) {
     Throw(hal_error(hal_status));
   }
 }
@@ -123,7 +123,7 @@ void FdCan::Write(u16 id, const u8 *data, usize size) {
 
   HAL_StatusTypeDef hal_status =
       HAL_FDCAN_AddMessageToTxFifoQ(this->hfdcan_, &this->hal_tx_header_, const_cast<u8 *>(data));
-  if (hal_status == HAL_OK) {
+  if (hal_status != HAL_OK) {
     Throw(hal_error(hal_status));
   }
 }
@@ -179,17 +179,17 @@ void FdCan::Enqueue(u16 id, const u8 *data, usize size, CanTxPriority priority) 
 void FdCan::Begin() {
   HAL_StatusTypeDef hal_status;
   hal_status = HAL_FDCAN_ActivateNotification(this->hfdcan_, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
-  if (hal_status == HAL_OK) {
+  if (hal_status != HAL_OK) {
     Throw(hal_error(hal_status));
   }
   hal_status = HAL_FDCAN_ActivateNotification(this->hfdcan_, FDCAN_IT_BUS_OFF, 0);
-  if (hal_status == HAL_OK) {
+  if (hal_status != HAL_OK) {
     Throw(hal_error(hal_status));
   }
   HAL_FDCAN_RegisterRxFifo0Callback(
       this->hfdcan_, StdFunctionToCallbackFunctionPtr([this] { Fifo0MsgPendingCallback(); }, this->hfdcan_));
   hal_status = HAL_FDCAN_Start(this->hfdcan_);
-  if (hal_status == HAL_OK) {
+  if (hal_status != HAL_OK) {
     Throw(hal_error(hal_status));
   }
 }
@@ -199,7 +199,7 @@ void FdCan::Begin() {
  */
 void FdCan::Stop() {
   HAL_StatusTypeDef hal_status = HAL_FDCAN_Stop(this->hfdcan_);
-  if (hal_status == HAL_OK) {
+  if (hal_status != HAL_OK) {
     Throw(hal_error(hal_status));
   }
 }
