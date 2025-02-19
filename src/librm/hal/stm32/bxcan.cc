@@ -40,17 +40,29 @@
 #include "librm/core/exception.h"
 
 /**
+ * 用于存储回调函数的map
+ * key: HAL库的CAN_HandleTypeDef
+ * value: 回调函数
+ */
+static std::unordered_map<CAN_HandleTypeDef *, std::function<void()>> fn_cb_map;
+
+/**
  * @brief  把std::function转换为函数指针
  * @param  fn   要转换的函数
+ * @param  hcan  HAL库的CAN_HandleTypeDef
  * @return      转换后的函数指针
  * @note
  * 背景：因为要用面向对象的方式对外设进行封装，所以回调函数必须存在于类内。但是存在于类内就意味着这个回调函数多了一个this参数，
  * 而HAL库要求的回调函数并没有这个this参数。通过std::bind，可以生成一个参数列表里没有this指针的std::function对象，而std::function
  * 并不能直接强转成函数指针。借助这个函数，可以把std::function对象转换成函数指针。然后就可以把这个类内的回调函数传给HAL库了。
  */
-static pCAN_CallbackTypeDef StdFunctionToCallbackFunctionPtr(std::function<void()> fn) {
-  static auto fn_v = std::move(fn);
-  return [](CAN_HandleTypeDef *handle) { fn_v(); };
+static pCAN_CallbackTypeDef StdFunctionToCallbackFunctionPtr(std::function<void()> fn, CAN_HandleTypeDef *hcan) {
+  fn_cb_map[hcan] = std::move(fn);
+  return [](CAN_HandleTypeDef *hcan) {
+    if (fn_cb_map.find(hcan) != fn_cb_map.end()) {
+      fn_cb_map[hcan]();
+    }
+  };
 }
 
 namespace rm::hal::stm32 {
@@ -75,16 +87,16 @@ void BxCan::SetFilter(u16 id, u16 mask) {
   can_filter_st.FilterMaskIdHigh = mask >> 8;
   can_filter_st.FilterMaskIdLow = mask;
   can_filter_st.FilterFIFOAssignment = CAN_RX_FIFO0;
-  if (reinterpret_cast<u32>(this->hcan_->Instance) == CAN1_BASE) {
+  if (reinterpret_cast<u32>(hcan_->Instance) == CAN1_BASE) {
     // 如果是CAN1
     can_filter_st.FilterBank = 0;
-  } else if (reinterpret_cast<u32>(this->hcan_->Instance) == CAN2_BASE) {
+  } else if (reinterpret_cast<u32>(hcan_->Instance) == CAN2_BASE) {
     // 如果是CAN2
     can_filter_st.SlaveStartFilterBank = 14;
     can_filter_st.FilterBank = 14;
   }
 
-  HAL_StatusTypeDef hal_status = HAL_CAN_ConfigFilter(this->hcan_, &can_filter_st);
+  HAL_StatusTypeDef hal_status = HAL_CAN_ConfigFilter(hcan_, &can_filter_st);
   if (hal_status != HAL_OK) {
     Throw(hal_error(hal_status));
   }
@@ -100,10 +112,10 @@ void BxCan::Write(u16 id, const u8 *data, usize size) {
   if (size > 8) {
     Throw(std::runtime_error("Data is too long for a std CAN frame!"));
   }
-  this->hal_tx_header_.StdId = id;
-  this->hal_tx_header_.DLC = size;
+  hal_tx_header_.StdId = id;
+  hal_tx_header_.DLC = size;
 
-  HAL_StatusTypeDef hal_status = HAL_CAN_AddTxMessage(this->hcan_, &this->hal_tx_header_, data, &this->tx_mailbox_);
+  HAL_StatusTypeDef hal_status = HAL_CAN_AddTxMessage(hcan_, &hal_tx_header_, data, &tx_mailbox_);
   if (hal_status != HAL_OK) {
     Throw(hal_error(hal_status));
   }
@@ -114,12 +126,12 @@ void BxCan::Write(u16 id, const u8 *data, usize size) {
  */
 void BxCan::Write() {
   // 按优先级从高到低遍历所有消息队列
-  for (auto &queue : this->tx_queue_) {
+  for (auto &queue : tx_queue_) {
     if (queue.second.empty()) {
       continue;  // 如果是空的就换下一个
     }
     // 从队首取出一条消息发送
-    this->Write(queue.second.front()->rx_std_id, queue.second.front()->data.data(), queue.second.front()->dlc);
+    Write(queue.second.front()->rx_std_id, queue.second.front()->data.data(), queue.second.front()->dlc);
     queue.second.pop_front();
     // 检查消息队列长度是否超过了设定的最大长度，如果超过了就清空
     if (queue.second.size() > kQueueMaxSize) {
@@ -141,8 +153,8 @@ void BxCan::Enqueue(u16 id, const u8 *data, usize size, CanTxPriority priority) 
     Throw(std::runtime_error("Data is too long for a CAN frame!"));
   }
   // 检查消息队列长度是否超过了设定的最大长度，如果超过了就清空
-  if (this->tx_queue_[priority].size() > kQueueMaxSize) {
-    this->tx_queue_[priority].clear();
+  if (tx_queue_[priority].size() > kQueueMaxSize) {
+    tx_queue_[priority].clear();
   }
   auto msg = std::make_shared<CanMsg>(CanMsg{
       .rx_std_id = id,
@@ -150,7 +162,7 @@ void BxCan::Enqueue(u16 id, const u8 *data, usize size, CanTxPriority priority) 
   });
   std::copy_n(data, size, msg->data.begin());
 
-  this->tx_queue_[priority].push_back(msg);
+  tx_queue_[priority].push_back(msg);
 }
 
 /**
@@ -158,17 +170,16 @@ void BxCan::Enqueue(u16 id, const u8 *data, usize size, CanTxPriority priority) 
  */
 void BxCan::Begin() {
   HAL_StatusTypeDef hal_status;
-  hal_status =
-      HAL_CAN_RegisterCallback(this->hcan_, HAL_CAN_RX_FIFO0_MSG_PENDING_CB_ID,
-                               StdFunctionToCallbackFunctionPtr(std::bind(&BxCan::Fifo0MsgPendingCallback, this)));
+  hal_status = HAL_CAN_RegisterCallback(hcan_, HAL_CAN_RX_FIFO0_MSG_PENDING_CB_ID,
+                                        StdFunctionToCallbackFunctionPtr([this] { Fifo0MsgPendingCallback(); }, hcan_));
   if (hal_status != HAL_OK) {
     Throw(hal_error(hal_status));
   }
-  hal_status = HAL_CAN_Start(this->hcan_);
+  hal_status = HAL_CAN_Start(hcan_);
   if (hal_status != HAL_OK) {
     Throw(hal_error(hal_status));
   }
-  hal_status = HAL_CAN_ActivateNotification(this->hcan_, CAN_IT_RX_FIFO0_MSG_PENDING);
+  hal_status = HAL_CAN_ActivateNotification(hcan_, CAN_IT_RX_FIFO0_MSG_PENDING);
   if (hal_status != HAL_OK) {
     Throw(hal_error(hal_status));
   }
@@ -178,7 +189,7 @@ void BxCan::Begin() {
  * @brief 停止CAN外设
  */
 void BxCan::Stop() {
-  HAL_StatusTypeDef hal_status = HAL_CAN_Stop(this->hcan_);
+  HAL_StatusTypeDef hal_status = HAL_CAN_Stop(hcan_);
   if (hal_status != HAL_OK) {
     Throw(hal_error(hal_status));
   }
@@ -190,13 +201,13 @@ void BxCan::Stop() {
  */
 void BxCan::Fifo0MsgPendingCallback() {
   static CAN_RxHeaderTypeDef rx_header;
-  HAL_CAN_GetRxMessage(this->hcan_, CAN_RX_FIFO0, &rx_header, this->rx_buffer_.data.data());
-  if (this->device_list_.find(rx_header.StdId) == this->device_list_.end()) {
+  HAL_CAN_GetRxMessage(hcan_, CAN_RX_FIFO0, &rx_header, rx_buffer_.data.data());
+  if (device_list_.find(rx_header.StdId) == device_list_.end()) {
     return;
   }
-  this->rx_buffer_.rx_std_id = rx_header.StdId;
-  this->rx_buffer_.dlc = rx_header.DLC;
-  this->device_list_[rx_header.StdId]->RxCallback(&this->rx_buffer_);
+  rx_buffer_.rx_std_id = rx_header.StdId;
+  rx_buffer_.dlc = rx_header.DLC;
+  device_list_[rx_header.StdId]->RxCallback(&rx_buffer_);
 }
 
 /**
@@ -205,10 +216,10 @@ void BxCan::Fifo0MsgPendingCallback() {
  * @param rx_stdid  设备想要接收的的rx消息标准帧id
  */
 void BxCan::RegisterDevice(device::CanDevice &device, u32 rx_stdid) {
-  if (this->device_list_.find(rx_stdid) != this->device_list_.end()) {
+  if (device_list_.find(rx_stdid) != device_list_.end()) {
     Throw(std::runtime_error("Device already registered"));
   }
-  this->device_list_[rx_stdid] = &device;
+  device_list_[rx_stdid] = &device;
 }
 
 }  // namespace rm::hal::stm32
