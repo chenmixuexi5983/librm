@@ -64,6 +64,7 @@
 #include "librm/modules/algorithm/chassis_fkik.hpp"
 #include "librm/modules/algorithm/crc.h"
 #include "librm/modules/algorithm/pid.hpp"
+#include "librm/modules/algorithm/threshold_trigger.hpp"
 #include "librm/modules/algorithm/utils.hpp"
 #include "librm/modules/vofa_plotter.hpp"
 /****************/
