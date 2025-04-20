@@ -120,8 +120,7 @@ class VT03 {
             crc16_this_time_) {
           // 整包接收完+校验通过，开始解析数据
           using modules::algorithm::utils::Map;
-          const u8 *kPayloadPtr = valid_data_so_far_.data() + 2;  // 前两个字节是两个sof，跳过
-          std::memcpy(&raw_payload_data_, kPayloadPtr, sizeof(raw_payload_data_));
+          std::memcpy(&raw_payload_data_, valid_data_so_far_.data(), sizeof(raw_payload_data_));
           data_.right_x = Map(raw_payload_data_.ch_0, 364, 1684, -1.0f, 1.0f);
           data_.right_y = Map(raw_payload_data_.ch_1, 364, 1684, -1.0f, 1.0f);
           data_.left_x = Map(raw_payload_data_.ch_2, 364, 1684, -1.0f, 1.0f);
@@ -152,12 +151,11 @@ class VT03 {
   const auto &data() const { return data_; }
 
  private:
-#pragma pack(push, 1)
   /**
    * @brief VT03遥控器数据包的原始数据结构，从示例代码里抄的：
    * @note  https://rm-static.djicdn.com/tem/17348/Example_Code_for_Data_Frame_and_Validation.c
    */
-  struct {
+  struct __attribute__((__packed__)) {
     u8 sof_1;
     u8 sof_2;
     u64 ch_0 : 11;
@@ -180,7 +178,6 @@ class VT03 {
     u16 key;
     u16 crc16;
   } raw_payload_data_;
-#pragma pack(pop)
   struct {
     f32 right_x;                     ///< 右摇杆水平方向位置，归一化到[-1, 1]，左负右正
     f32 right_y;                     ///< 右摇杆垂直方向位置，归一化到[-1, 1]，左负右正
