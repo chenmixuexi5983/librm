@@ -22,7 +22,7 @@ jobs:
           path: "doxygen-awesome-css"
       
       - name: Setup doxygen css step 2
-        run: echo "#projectname {display:none}" >> doxygen-awesome-css/doxygen-awesome-css.css
+        run: echo "#projectname {display:none}" >> doxygen-awesome-css/doxygen-awesome.css
 
       - name: Install dependencies
         run: |
