@@ -15,6 +15,12 @@ jobs:
         with:
           lfs: true
 
+      - name: Get doxygen theme
+        uses: actions/checkout@v4
+        with:
+          repository: "jothepro/doxygen-awesome-css"
+          path: "doxygen-awesome-css"
+
       - name: Install dependencies
         run: |
           sudo apt-get update
