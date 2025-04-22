@@ -15,11 +15,14 @@ jobs:
         with:
           lfs: true
 
-      - name: Get doxygen theme
+      - name: Setup doxygen css step 1
         uses: actions/checkout@v4
         with:
           repository: "jothepro/doxygen-awesome-css"
           path: "doxygen-awesome-css"
+      
+      - name: Setup doxygen css step 2
+        run: echo "#projectname {display:none}" > doxygen-awesome-css/doxygen-awesome-css.css
 
       - name: Install dependencies
         run: |
